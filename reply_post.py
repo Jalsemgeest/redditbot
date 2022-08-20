@@ -3,7 +3,7 @@ import pdb
 import re
 import os
 
-reddit = praw.Reddit('JakesBot')
+reddit = praw.Reddit('JakeEhBot')
 
 print("starting")
 if not os.path.isfile("posts_replied_to.txt"):
@@ -16,10 +16,10 @@ else:
        f.close()
 
 
-subreddit = reddit.subreddit('pythonforengineers')
+subreddit = reddit.subreddit('jakeehbottesting')
 for submission in subreddit.hot(limit=5):
     if submission.id not in posts_replied_to:
-        if re.search("i love python", submission.title, re.IGNORECASE):
+        if re.search("i love jakeeh", submission.title, re.IGNORECASE):
             submission.reply("Botty bot says: Me too!!")
             print("Bot replying to : ", submission.title)
             posts_replied_to.append(submission.id)
