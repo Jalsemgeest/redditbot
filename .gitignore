@@ -1,1 +1,3 @@
 praw.ini
+new_*
+__pycache__
