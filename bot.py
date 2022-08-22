@@ -1,8 +1,14 @@
 import os
 import parser
 import praw
+import filehelper
+from parser import Parser
 from communication import Communication
 from mod_helper import ModHelper
+
+# Things I want to add support for:
+# - Random hash generated and stored for comment thread with specific flair
+# - Maybe a game or something... but probably not a priority... ;)
 
 class Bot():
 	def __init__(self, botName='JakeEhBot', subreddit='jakeehbottesting', silent=True):
@@ -14,17 +20,27 @@ class Bot():
 		self.reddit = praw.Reddit(botName)
 		self.subredditName = subreddit
 		self.subreddit = self.reddit.subreddit(subreddit)
+		self.trackedFunSubmissions = filehelper.readTrackedFunSubmissions()
+		print(self.trackedFunSubmissions)
 		self.comms = Communication()
 		self.populateFlairTypes()
 		self.populateMods()
 		self.modHelper = ModHelper(self)
+		self.parser = Parser(self)
 		self.readOrCreateLogs()
 
 	def populateFlairTypes(self):
 		for flair in self.subreddit.flair.templates:
 			self.FLAIR_TYPES[flair['text']] = {
 				'id': flair['id'],
-				'css_class': flair['css_class']
+				'css_class': flair['css_class'],
+				'type': 'USER',
+			}
+		for flair in self.subreddit.flair.link_templates:
+			self.FLAIR_TYPES[flair['text']] = {
+				'id': flair['id'],
+				'css_class': flair['css_class'],
+				'type': 'SUBMISSION',
 			}
 		self.log('Retrieved flairs: ', self.FLAIR_TYPES)
 	
@@ -46,6 +62,8 @@ class Bot():
 						self.log(submission.score)
 						self.log(submission.title)
 						self.log(submission.selftext)
+						if submission.author != self.botName:
+							self.handleSubmission(submission)
 						# submission.reply('Thanks for posting!')
 						self.submissions_replied_to.append(submission.id)
 				for comment in self.commentStream:
@@ -59,12 +77,21 @@ class Bot():
 						self.comments_replied_to.append(comment.id)
 		except KeyboardInterrupt:
 			self.log("Stopped listening")
-			self.saveState()
-		
+			self.saveState()	
 	
+	def handleSubmission(self, submission):
+		self.log("Attempting to handle submission: ", submission.id)
+		type = self.parser.parseSubmission(submission)
+		match type:
+			case parser.SubmissionResponse.FUN:
+				if self.isMod(submission.author):
+					self.modHelper.handleFunSubmission(submission)
+			case parser.SubmissionResponse.UNKNOWN:
+				self.log("Submission has no response needed: ", submission.id)
+
 	def handleComment(self, comment):
 		self.log("Attemping to handle comment: ", comment.id)
-		type = parser.parseComment(comment)
+		type = self.parser.parseComment(comment)
 		match type:
 			case parser.CommentResponse.HELP:
 				self.comms.help(comment)
@@ -82,37 +109,17 @@ class Bot():
 		return user in self.MODS
 
 	def readOrCreateLogs(self):
-		if not os.path.isfile("new_submissions_reponded_to.txt"):
-			self.submissions_replied_to = []
-		else:
-			with open("new_submissions_reponded_to.txt", "r") as f:
-				self.submissions_replied_to = f.read()
-				self.submissions_replied_to = self.submissions_replied_to.split("\n")
-				self.submissions_replied_to = list(filter(None, self.submissions_replied_to))
-				f.close()
-
-		if not os.path.isfile("new_comments_reponded_to.txt"):
-			self.comments_replied_to = []
-		else:
-			with open("new_comments_reponded_to.txt", "r") as f:
-				self.comments_replied_to = f.read()
-				self.comments_replied_to = self.comments_replied_to.split("\n")
-				self.comments_replied_to = list(filter(None, self.comments_replied_to))
-				f.close()
+		self.submissions_replied_to = filehelper.readSubmissions()
+		self.comments_replied_to = filehelper.readComments()
 
 	def log(self, *toPrint):
 		if not self.silent:
 			print(toPrint)
 
 	def saveState(self):
-		# We could 
-		with open("new_submissions_reponded_to.txt", "w") as f:
-			for post_id in self.submissions_replied_to:
-				f.write(post_id + "\n")
-			f.close()
-
-		with open("new_comments_reponded_to.txt", "w") as f:
-			for post_id in self.comments_replied_to:
-				f.write(post_id + "\n")
-			f.close()
-		self.log("Saved data to files.")
+		# We could
+		# filehelper.writeSubmissions(self.submissions_replied_to)
+		# filehelper.writeComments(self.comments_replied_to)
+		print("tracked")
+		print(self.trackedFunSubmissions)
+		filehelper.writeTrackedFunSubmissions(self.trackedFunSubmissions)
