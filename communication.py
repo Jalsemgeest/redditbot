@@ -1,9 +1,9 @@
 
-class GameHelper():
+class CommunicationHelper():
 	def createMessage(arr):
 		return '\n\n'.join(arr)
 
-class Game():
+class Communication():
 	def __init__(self):
 		self.name = 'RPG Game'
 	
@@ -14,8 +14,10 @@ class Game():
 			"Don\'t worry! JakeEhBot is here!",
 			"Here are the \'commands\' I currently support:",
 			"* _help_: This command - duh.",
-			"* _game_: Explains what game I support."
+			"Mod Only:",
+			"* _!flair <user> <flair> <text_nospaces>_: Sets a user's flair to the provided flair with the provided text (default uses default)",
+			"* _!noflair <user>_: Sets a users flair to nothing"
 		]
-		stream.reply(GameHelper.createMessage(msg))
+		stream.reply(CommunicationHelper.createMessage(msg))
 
 		
