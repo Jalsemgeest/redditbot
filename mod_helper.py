@@ -28,11 +28,11 @@ class ModHelper():
 		self.bot.subreddit.flair.set(redditor=user, text=text, flair_template_id=templateId)
 
 	def handleFunSubmission(self, submission):
-		self.bot.trackedFunSubmissions[submission.id] = {
-			'author': submission.author.name,
-			'hash': uuid.uuid4().hex,
-			'datetime': int(time.time() * 1000),
-		}
-		print(self.bot.trackedFunSubmissions)
-		print(submission.id)
+		if submission.id not in self.bot.trackedFunSubmissions:
+			self.bot.trackedFunSubmissions[submission.id] = {
+				'author': submission.author.name,
+				'hash': uuid.uuid4().hex,
+				'datetime': int(time.time() * 1000),
+				'winner': ''
+			}
 

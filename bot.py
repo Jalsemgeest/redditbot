@@ -4,6 +4,7 @@ import praw
 import filehelper
 from parser import Parser
 from communication import Communication
+from fungame import FunGame
 from mod_helper import ModHelper
 
 # Things I want to add support for:
@@ -21,8 +22,8 @@ class Bot():
 		self.subredditName = subreddit
 		self.subreddit = self.reddit.subreddit(subreddit)
 		self.trackedFunSubmissions = filehelper.readTrackedFunSubmissions()
-		print(self.trackedFunSubmissions)
-		self.comms = Communication()
+		self.comms = Communication(self)
+		self.funGame = FunGame(self)
 		self.populateFlairTypes()
 		self.populateMods()
 		self.modHelper = ModHelper(self)
@@ -101,6 +102,8 @@ class Bot():
 			case parser.CommentResponse.FLAIR_NONE:
 				if self.isMod(comment.author):
 					self.modHelper.handleFlairNone(comment)
+			case parser.CommentResponse.FUN_ATTEMPT:
+				self.funGame.attemptFun(comment)
 			case parser.CommentResponse.UNKNOWN:
 				self.log("Comment has no response needed: ", comment.id)
 
@@ -118,8 +121,8 @@ class Bot():
 
 	def saveState(self):
 		# We could
-		# filehelper.writeSubmissions(self.submissions_replied_to)
-		# filehelper.writeComments(self.comments_replied_to)
+		filehelper.writeSubmissions(self.submissions_replied_to)
+		filehelper.writeComments(self.comments_replied_to)
 		print("tracked")
 		print(self.trackedFunSubmissions)
 		filehelper.writeTrackedFunSubmissions(self.trackedFunSubmissions)

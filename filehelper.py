@@ -7,9 +7,11 @@ def readTrackedFunSubmissions():
 	try:
 		with open("tracked-submissions.fun", "rb") as in_file:
 			data = in_file.read()
-			dictData = data.decode('utf-8')
-			dict = ast.literal_eval(dictData)
-			return dict
+			if len(data) > 0:
+				dictData = data.decode('utf-8')
+				dict = ast.literal_eval(dictData)
+				return dict
+			return {}
 	except FileNotFoundError:
 		return {}
 

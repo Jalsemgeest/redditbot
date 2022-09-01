@@ -4,8 +4,8 @@ class CommunicationHelper():
 		return '\n\n'.join(arr)
 
 class Communication():
-	def __init__(self):
-		self.name = 'RPG Game'
+	def __init__(self, bot):
+		self.bot = bot
 	
 	# When help is called with a given stream, it will respond to the stream
 	# with information on what the bot can do.

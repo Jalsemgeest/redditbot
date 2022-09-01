@@ -1,5 +1,4 @@
 import re
-import copy
 from enum import Enum
 
 class CommentResponse(Enum):
@@ -7,6 +6,7 @@ class CommentResponse(Enum):
 	HELP = 2
 	FLAIR_CHANGE = 3
 	FLAIR_NONE = 4
+	FUN_ATTEMPT = 5
 
 class SubmissionResponse(Enum):
 	UNKNOWN = 1
@@ -23,15 +23,16 @@ class Parser():
 			return CommentResponse.FLAIR_CHANGE
 		elif re.search('!noflair', comment.body, re.IGNORECASE):
 			return CommentResponse.FLAIR_NONE
+		elif re.search('^!funattempt [A-za-z0-9]{1,32}', comment.body):
+			return CommentResponse.FUN_ATTEMPT
 		return CommentResponse.UNKNOWN
 
 	def parseSubmission(self, submission):
 		flair = None
-		print('Parsing submission')
 		for (key, value) in self.bot.FLAIR_TYPES.items():
 			if value['type'] == 'SUBMISSION':
 				# This is required purely do ensure that the template_id matches what is expected.
-				if value['id'] == submission.link_flair_template_id and key == submission.link_flair_text:
+				if hasattr(submission, 'link_flair_template_id') and value['id'] == submission.link_flair_template_id and key == submission.link_flair_text:
 					flair = key
 					break
 		if flair == 'Fun':
